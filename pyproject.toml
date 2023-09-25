@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "falcon-postgres"
+version = "0.1.0"
+description = ""
+authors = ["JoaoPedroLeite <jplff18@hotmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+falcon = "^3.1.1"
+psycopg2 = "^2.9.7"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
