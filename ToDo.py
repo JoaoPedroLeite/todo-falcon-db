@@ -94,7 +94,31 @@ class ThingsResource:
         for indice, tarefa in lista:
             lista_dicionario[indice] = tarefa 
         
-        response.media = lista_dicionario
+        # response.media = lista_dicionario
+
+
+        # response.status = falcon.HTTP_200
+        
+        # response.content_type = falcon.MEDIA_TEXT
+
+        # lista = listar_tarefas(conn)
+
+        # Crie uma lista de strings formatadas
+        # lista_formatada = str(f"{indice}: {tarefa}" for indice, tarefa in lista)
+        # dicionario_string = '\n'.join([f'{chave}: "{valor}"' for chave, valor in lista_dicionario.items()])
+
+
+
+        # print(dicionario_string)
+
+        # Defina a resposta como a lista formatada
+        # response.media = dicionario_string
+
+        #Esse for só deixa o ultimo valor:
+
+        for chave, valor in lista_dicionario.items():
+            response.media = (f'Chave: {chave}, Valor: {valor}')
+            print(f'Chave: {chave}, Valor: {valor}')
 
         
     def on_post(self, request, response):
