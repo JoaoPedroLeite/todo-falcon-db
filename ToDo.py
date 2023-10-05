@@ -6,76 +6,56 @@ import json
 
 import psycopg2
 
-try:
-    conn = psycopg2.connect("dbname='meubanco' user='joao' host='localhost' port='5432' password='1234'")
-#erro ao tentar conectar com o banco desligado
-except psycopg2.OperationalError as error:
-    print(f"Erro de conexão: {error}")
+def get_db_conn():
+    print("Conectando ao banco de dados...")
+    try:
+        conn = psycopg2.connect("dbname='meubanco' user='joao' host='localhost' port='5432' password='1234'")
+    except psycopg2.OperationalError as error:
+        raise psycopg2.OperationalError(error)
+    print("Conectado!")
+    return conn
 
 
 def listar_tarefas(conn):
     with conn.cursor() as curs:
-        curs.execute("SELECT * FROM tarefas;")
         try:
+            curs.execute("SELECT * FROM tarefas;")
             many_rows = curs.fetchmany(3)
-        except (Exception, psycopg2.DatabaseError) as error:
-            print(error)
-            # raise NameError("erro de banco desligado")
+        except psycopg2.IntegrityError as integrity_error:
+            print("Erro de integridade do banco de dados:", integrity_error)
+            raise integrity_error
+        except psycopg2.ProgrammingError as programming_error:
+            print("Erro de programação SQL:", programming_error)
+            raise programming_error
+        except psycopg2.OperationalError as operational_error:
+            print("Erro operacional:", operational_error)
+            raise operational_error
         return many_rows
 
 
 class ListResource:
+    def __init__(self, conn):
+        self.conn = conn
+
     def on_get(self, request, response):
         response.status = falcon.HTTP_200 # This is the default status
-        lista = listar_tarefas(conn)
+        lista = listar_tarefas(self.conn)
         lista_dicionario = {}
         for indice, tarefa in lista:
             lista_dicionario[indice] = tarefa 
         
         response.media = lista_dicionario
 
-        
-    def on_post(self, request, response):
-        response.status = falcon.HTTP_200 # This is the default status
-        # response.content_type = falcon.MEDIA_TEXT  # Default is JSON, so override
-        lista = ler_arquivo()
-        body = request.bounded_stream.read()
-        dicionario = json.loads(body.decode('utf-8'))
-        response.media = {"mensagem": f"recebido a tarefa {dicionario['data']}"}
-        adicionar_tarefa(dicionario['data'])
 
-   
-
-class CreateResource:
-    def on_delete(self, request, response, task_id):
-        response.status = falcon.HTTP_204
-        response.content_type = falcon.MEDIA_TEXT  # Default is JSON, so override.status
-        erro = remover_tarefa(task_id)
-
-        if erro == False:
-            response.status = falcon.HTTP_200
-            response.text = "Tarefa não encontrada"
-    
-    def on_patch(self, request, response, task_id):
-
-        response.status = falcon.HTTP_204
-        body = request.bounded_stream.read()
-        dicionario = json.loads(body.decode('utf-8'))
-        response.media = {"mensagem": f"recebido a tarefa {dicionario['data']}"}
-        atualizar_tarfa(task_id,dicionario['data'])
-
-
-app = falcon.App()
-things = ListResource()
-things_cows = CreateResource()
-
-app.add_route('/tarefas/', things)
-app.add_route('/tarefas/{task_id:int}', things_cows)
-
-if __name__ == '__main__':
+def main():
+    conn = get_db_conn()
+    app = falcon.App()
+    things = ListResource(conn)
+    app.add_route('/tarefas/', things)
     with make_server('', 8000, app) as httpd:
         print('Serving on port 8000...')
-
         # Serve until process is killed
         httpd.serve_forever()
 
+if __name__ == '__main__':
+    main()
