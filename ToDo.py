@@ -35,11 +35,11 @@ def listar_tarefas(conn):
 
 def adicionar_tarefa(conn, dados):
     with conn.cursor() as curs:
+        insert_query ="INSERT INTO tarefas (tarefa) VALUES (%s);"
+        dados = (dados["tarefa"],)
+
         try:
-            insert_query = "INSERT INTO tarefas (id, tarefa) VALUES (%s, %s)"
-            dados = (dados["id"], dados["tarefa"])
             curs.execute(insert_query, dados)
-            conn.commit()
         except psycopg2.IntegrityError as integrity_error:
             print("Erro de integridade do banco de dados:", integrity_error)
             raise integrity_error
@@ -49,6 +49,7 @@ def adicionar_tarefa(conn, dados):
         except psycopg2.OperationalError as operational_error:
             print("Erro operacional:", operational_error)
             raise operational_error
+        conn.commit()
 
 
 class ListResource:
@@ -65,11 +66,10 @@ class ListResource:
         response.media = lista_dicionario
     
     def on_post(self, request, response):
-        response.status = falcon.HTTP_200 # This is the default status
         body = request.bounded_stream.read()
-        dados_dicionario = json.loads(body.decode('utf-8'))
-        adicionar_tarefa(self.conn, dados_dicionario)
-        response.media = {"mensagem": "recebido a tarefa"}
+        nova_tarefa = json.loads(body.decode('utf-8'))
+        adicionar_tarefa(self.conn, nova_tarefa)
+        response.media = {"mensagem": f"recebido a tarefa: {nova_tarefa['tarefa']}"}
 
 
 def main():
