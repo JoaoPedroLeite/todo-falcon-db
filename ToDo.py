@@ -40,15 +40,8 @@ def adicionar_tarefa(conn, dados):
 
         try:
             curs.execute(insert_query, dados)
-        except psycopg2.IntegrityError as integrity_error:
-            print("Erro de integridade do banco de dados:", integrity_error)
-            raise integrity_error
-        except psycopg2.ProgrammingError as programming_error:
-            print("Erro de programação SQL:", programming_error)
-            raise programming_error
-        except psycopg2.OperationalError as operational_error:
-            print("Erro operacional:", operational_error)
-            raise operational_error
+        except (psycopg2.IntegrityError, psycopg2.ProgrammingError, psycopg2.OperationalError) as erro:
+            raise psycopg2.DatabaseError(erro)
         conn.commit()
 
 
