@@ -45,6 +45,18 @@ def adicionar_tarefa(conn, dados):
         conn.commit()
 
 
+def remover_tarefa(conn, task_id):
+    with conn.cursor() as curs:
+        insert_query ="DELETE FROM tarefas WHERE id = %s"
+        indice = task_id
+
+        try:
+            curs.execute(insert_query, (str(indice),))
+        except (psycopg2.IntegrityError, psycopg2.ProgrammingError, psycopg2.OperationalError) as erro:
+            raise psycopg2.DatabaseError(erro)
+        conn.commit()
+
+
 class ListResource:
     def __init__(self, conn):
         self.conn = conn
@@ -65,11 +77,25 @@ class ListResource:
         response.media = {"mensagem": f"recebido a tarefa: {nova_tarefa['tarefa']}"}
 
 
+class OtherResource:
+    def __init__(self, conn):
+        self.conn = conn
+
+    def on_delete(self, request, response, task_id):
+        response.status = falcon.HTTP_204
+        response.content_type = falcon.MEDIA_TEXT  # Default is JSON, so override.status
+        remover_tarefa(self.conn, task_id)
+
+
 def main():
     conn = get_db_conn()
     app = falcon.App()
     things = ListResource(conn)
     app.add_route('/tarefas/', things)
+
+    things_other = OtherResource(conn)
+    app.add_route('/tarefas/{task_id:int}', things_other)
+
     with make_server('', 8000, app) as httpd:
         print('Serving on port 8000...')
         # Serve until process is killed
