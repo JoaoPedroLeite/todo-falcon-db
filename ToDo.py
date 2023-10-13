@@ -58,11 +58,11 @@ def remover_tarefa(conn, task_id):
 
 
 def atualizar_tarfa(conn, task_id, tarefa):
-    with conn.cursor() as curs:
-        insert_query ="UPDATE tarefas SET tarefa = %s WHERE id = %s"
-        indice = task_id
-        dados = (tarefa["tarefa"], str(indice))
+    insert_query ="UPDATE tarefas SET tarefa = %s WHERE id = %s"
+    indice = task_id
+    dados = (tarefa["tarefa"], str(indice))
 
+    with conn.cursor() as curs:
         try:
             curs.execute(insert_query, dados)
         except (psycopg2.IntegrityError, psycopg2.ProgrammingError, psycopg2.OperationalError) as erro:
