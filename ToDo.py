@@ -57,6 +57,20 @@ def remover_tarefa(conn, task_id):
         conn.commit()
 
 
+def atualizar_tarfa(conn, task_id, tarefa):
+    insert_query ="UPDATE tarefas SET tarefa = %s WHERE id = %s"
+    indice = task_id
+    dados = (tarefa["tarefa"], str(indice))
+
+    with conn.cursor() as curs:
+        try:
+            curs.execute(insert_query, dados)
+        except (psycopg2.IntegrityError, psycopg2.ProgrammingError, psycopg2.OperationalError) as erro:
+            raise psycopg2.DatabaseError(erro)
+        conn.commit()
+
+
+
 class ListResource:
     def __init__(self, conn):
         self.conn = conn
@@ -85,6 +99,12 @@ class OtherResource:
         response.status = falcon.HTTP_204
         response.content_type = falcon.MEDIA_TEXT  # Default is JSON, so override.status
         remover_tarefa(self.conn, task_id)
+    
+    def on_patch(self, request, response, task_id):
+        body = request.bounded_stream.read()
+        nova_tarefa = json.loads(body.decode('utf-8'))
+        atualizar_tarfa(self.conn, task_id, nova_tarefa)
+        response.media = {"mensagem": f"tarefa alterada para: {nova_tarefa['tarefa']}"}
 
 
 def main():
