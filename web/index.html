@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <h1>Tarefas:</h1>
+  <form method="post" action="http://localhost:8000/tarefas/">
+    <input type="text" placeholder="tarefa" name="tarefa"/>
+    <button type="submit">Adicionar</button>
+  </form>
+  <ul id="listaDeTarefas"></ul>
+
+</body>
+<script>
+
+
+fetch("http://localhost:8000/tarefas/")
+  .then(response => response.json())
+  .then(data => {
+      const listaDeTarefasElement = document.getElementById("listaDeTarefas"); //pega o elemento pelo id da div
+
+      // Itera sobre os dados e cria um elemento HTML para cada número e tarefa
+      for (const numero in data) {
+          if (data.hasOwnProperty(numero)) {
+              const tarefa = data[numero];
+              const linha = document.createElement("li"); //cria um novo elemento <p> (parágrafo) 
+              linha.textContent = ` ${numero} - ${tarefa}`;
+              listaDeTarefasElement.appendChild(linha); //adiciona o paragrafo
+          }
+      }
+  })
+  .catch(error => {
+      console.error("Erro na requisição fetch:", error);
+  });
+
+
+
+</script>
+</html>
