@@ -37,6 +37,7 @@ def adicionar_tarefa(conn, dados):
     with conn.cursor() as curs:
         insert_query ="INSERT INTO tarefas (tarefa) VALUES (%s);"
         dados = (dados["tarefa"],)
+        print(dados)
 
         try:
             curs.execute(insert_query, dados)
@@ -86,6 +87,8 @@ class ListResource:
     
     def on_post(self, request, response):
         body = request.bounded_stream.read()
+        print(f"{body = }")
+        print(f"{body.decode('utf-8') = }")
         nova_tarefa = json.loads(body.decode('utf-8'))
         adicionar_tarefa(self.conn, nova_tarefa)
         response.media = {"mensagem": f"recebido a tarefa: {nova_tarefa['tarefa']}"}
@@ -109,7 +112,7 @@ class OtherResource:
 
 def main():
     conn = get_db_conn()
-    app = falcon.App()
+    app = falcon.App(cors_enable = True)
     things = ListResource(conn)
     app.add_route('/tarefas/', things)
 
